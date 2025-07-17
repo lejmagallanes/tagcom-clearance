@@ -19,6 +19,7 @@
     "@mui/x-date-pickers": "^8.8.0",
     "axios": "^1.10.0",
     "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^17.2.0",
     "escpos": "^3.0.0-alpha.6",

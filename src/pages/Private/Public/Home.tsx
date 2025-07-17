@@ -21,26 +21,26 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
-import { toPng } from "html-to-image";
+// import { toPng } from "html-to-image";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { render, Printer, Text, Br, Line, Image } from "react-thermal-printer";
 
-export async function renderReceiptToImage(): Promise<string | null> {
-  const element = document.getElementById("receipt-content");
-  if (!element) return null;
+// export async function renderReceiptToImage(): Promise<string | null> {
+//   const element = document.getElementById("receipt-content");
+//   if (!element) return null;
 
-  try {
-    const dataUrl = await toPng(element, {
-      backgroundColor: "white",
-      cacheBust: true,
-    });
-    return dataUrl; // base64 PNG
-  } catch (err) {
-    console.error("Failed to render receipt image:", err);
-    return null;
-  }
-}
+//   try {
+//     const dataUrl = await toPng(element, {
+//       backgroundColor: "white",
+//       cacheBust: true,
+//     });
+//     return dataUrl; // base64 PNG
+//   } catch (err) {
+//     console.error("Failed to render receipt image:", err);
+//     return null;
+//   }
+// }
 
 type FormValuesProps = {
   date: Dayjs;
@@ -52,6 +52,17 @@ type FormValuesProps = {
 };
 
 const env = import.meta.env;
+
+const RealTimeDateTime = () => {
+  const [dateState, setDateState] = useState(new Date());
+  useEffect(() => {
+    setInterval(() => {
+      setDateState(new Date());
+    }, 1000);
+  }, []);
+
+  return <>{moment(dateState).format("MMMM DD, YYYY, h:mm:ss A")}</>;
+};
 
 const Home = () => {
   const [formValues, setFormValues] = useState<FormValuesProps>({
@@ -71,7 +82,7 @@ const Home = () => {
 
     setFormValues((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "name" ? value.toUpperCase() : value,
     }));
   };
 
@@ -108,12 +119,92 @@ const Home = () => {
     //   console.error("Print failed:", err);
     // }
 
-    const imageDataUrl = await renderReceiptToImage();
-    if (!imageDataUrl) return;
+    // const imageDataUrl = await renderReceiptToImage();
+    // if (!imageDataUrl) return;
 
     const buffer = await render(
       <Printer type="epson">
-        <Image src={imageDataUrl} />
+        <Image align="center" src={`/tagcom_logo_ticket.png`} />
+        <Br />
+        <Br />
+        <Text align="center" style={{ wordBreak: "break-word" }}>
+          PATIENT'S COPY
+        </Text>
+        <Br />
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          DATE: <RealTimeDateTime />
+        </Text>
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          PATIENT NAME: {formValues.name}
+        </Text>
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          AGE/SEX: {formValues.age}/{formValues.sex}
+        </Text>
+        <Br />
+        <Br />
+        <Text align="center">
+          This certfies that the patient has no more pending amount to settle in
+          the clinic and is cleared for discharge.
+        </Text>
+        <Br />
+        <Br />
+        <Text align="left" bold={true}>
+          Signed:
+        </Text>
+        <Br />
+        <Text align="center" bold={true}>
+          {" "}
+          {env.VITE_APP_DOCTOR_LABEL}, {env.VITE_APP_DOCTOR_TITLE}
+        </Text>
+        <Text align="center"> {env.VITE_APP_DOCTOR_SPEC}</Text>
+        <Br />
+        <Br />
+        <Text align="left" bold>
+          Noted:
+        </Text>
+        <Text align="center" bold={true}>
+          {env.VITE_APP_STAFF_NAME}
+        </Text>
+        <Text align="center">{env.VITE_APP_STAFF_POS}</Text>
+        <Text align="center" bold={true}>
+          {env.VITE_APP_HOSPITAL_NAME}
+        </Text>
+        <Br />
+        <Line />
+        <Br />
+        <Br />
+        <Text align="center" style={{ wordBreak: "break-word" }}>
+          CLINIC'S COPY
+        </Text>
+        <Br />
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          DATE: <RealTimeDateTime />
+        </Text>
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          PATIENT NAME: {formValues.name}
+        </Text>
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          AGE/SEX: {formValues.age}/{formValues.sex}
+        </Text>
+        <Br />
+        <Br />
+        <Text align="left" bold>
+          Noted:
+        </Text>
+        <Text align="center" bold={true}>
+          {env.VITE_APP_STAFF_NAME}
+        </Text>
+        <Text align="center">{env.VITE_APP_STAFF_POS}</Text>
+        <Text align="center">{env.VITE_APP_HOSPITAL_NAME}</Text>
+        <Br />
+        <Line />
+        <Br />
       </Printer>
     );
 
@@ -248,25 +339,12 @@ const StyledPatientDetails = styled(Typography, {
 }));
 
 const PatientDetails = ({
-  date,
   name,
   age,
   sex,
   clinic,
   amount,
 }: FormValuesProps) => {
-  const RealTimeDateTime = () => {
-    const [dateState, setDateState] = useState(new Date());
-    const t = new Date();
-    useEffect(() => {
-      setInterval(() => {
-        setDateState(new Date());
-      }, 1000);
-    }, []);
-
-    return <>{moment(dateState).format("MMMM DD, YYYY, h:mm:ss A")}</>;
-  };
-
   return (
     <Grid container>
       <Grid size={12} sx={{ p: 0.5 }}>
@@ -293,8 +371,18 @@ const PatientDetails = ({
 
 const PrintableReceipt = (formValues: FormValuesProps) => {
   return (
-    <div id="receipt-content">
-      <Grid container justifyContent={"center"}>
+    <div
+      style={{
+        fontFamily: "Courier New",
+        fontSize: "16px",
+        margin: 0,
+        padding: 0,
+        width: "384px", // match thermal width
+        backgroundColor: "white",
+        color: "black",
+      }}
+    >
+      <Grid container size={12}>
         {/* Patients Copy */}
         <Grid container spacing={2} mt={10}>
           <PatientsCopy {...formValues} />
@@ -309,7 +397,7 @@ const PrintableReceipt = (formValues: FormValuesProps) => {
             width: "50vh",
           }}
         />
-        <Grid container spacing={2} mt={2}>
+        <Grid container spacing={2} mt={2} mb={5}>
           <ClinicsCopy {...formValues} clinic={true} />
         </Grid>
       </Grid>
@@ -479,6 +567,7 @@ const ClinicsCopy = (props: FormValuesProps) => {
       <Divider
         sx={{
           my: 2,
+          mb: 10,
           borderBottomWidth: "medium",
           borderColor: "black",
           width: "50vh",
