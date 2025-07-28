@@ -409,6 +409,7 @@ const PrintableReceipt = (formValues: FormValuesProps) => {
         width: "384px", // match thermal width
         backgroundColor: "white",
         color: "black",
+        display: "none",
       }}
     >
       <Grid container size={12}>
