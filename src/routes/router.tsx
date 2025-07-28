@@ -9,7 +9,7 @@ const Router = () => {
   return (
     <BRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/tagcom-clearance/" element={<Home />} />
 
         <Route
           path="/login"

@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_NAME: string;
   readonly VITE_APP_DOCTOR_TITLE: string;
   readonly VITE_APP_DOCTOR_LABEL: string;
+  readonly VITE_APP_DOCTOR_LABEL_2: string;
   readonly VITE_APP_DOCTOR_SPEC: string;
   readonly VITE_APP_STAFF_NAME: string;
   readonly VITE_APP_STAFF_POS: string;

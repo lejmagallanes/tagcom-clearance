@@ -122,22 +122,46 @@ const Home = () => {
     // const imageDataUrl = await renderReceiptToImage();
     // if (!imageDataUrl) return;
 
+    function wrapLineByWords(text: string, max = 32): string {
+      const words = text.split(" ");
+      let lines: string[] = [];
+      let currentLine = "";
+
+      for (const word of words) {
+        // If adding the next word exceeds the max length
+        if ((currentLine + word).length > max) {
+          lines.push(currentLine.trim()); // push current line
+          currentLine = word + " "; // start new line
+        } else {
+          currentLine += word + " ";
+        }
+      }
+
+      if (currentLine.trim()) {
+        lines.push(currentLine.trim()); // push final line
+      }
+
+      return lines.join("\n");
+    }
+
     const buffer = await render(
       <Printer type="epson">
-        <Image align="center" src={`/tagcom_logo_ticket.png`} />
+        <Image
+          align="center"
+          src={`/tagcom-clearance/tagcom_logo_ticket.png`}
+        />
         <Br />
         <Br />
         <Text align="center" style={{ wordBreak: "break-word" }}>
           PATIENT'S COPY
         </Text>
         <Br />
-        <Br />
         <Text align="left" size={{ height: 1, width: 1 }}>
           DATE: <RealTimeDateTime />
         </Text>
         <Br />
         <Text align="left" size={{ height: 1, width: 1 }}>
-          PATIENT NAME: {formValues.name}
+          PATIENT NAME: {wrapLineByWords(formValues.name)}
         </Text>
         <Br />
         <Text align="left" size={{ height: 1, width: 1 }}>
@@ -146,21 +170,23 @@ const Home = () => {
         <Br />
         <Br />
         <Text align="center">
-          This certfies that the patient has no more pending amount to settle in
-          the clinic and is cleared for discharge.
+          {wrapLineByWords(
+            "This certifies that the patient has no more pending amount to settle in the clinic and is cleared for discharge."
+          )}
         </Text>
         <Br />
         <Br />
         <Text align="left" bold={true}>
           Signed:
         </Text>
-        <Br />
-        <Text align="center" bold={true}>
-          {" "}
-          {env.VITE_APP_DOCTOR_LABEL}, {env.VITE_APP_DOCTOR_TITLE}
-        </Text>
-        <Text align="center"> {env.VITE_APP_DOCTOR_SPEC}</Text>
-        <Br />
+        <Image align="center" src={`/tagcom-clearance/doc_sign.png`} />
+        {/* <Text align="center" size={{ width: 1, height: 1 }} font="A">
+          {wrapLineByWords(
+            `${env.VITE_APP_DOCTOR_LABEL}, ${env.VITE_APP_DOCTOR_TITLE}`
+          )}
+        </Text> */}
+        {/* <Text align="center"> {wrapLineByWords(env.VITE_APP_DOCTOR_SPEC)}</Text> */}
+        {/* <Br /> */}
         <Br />
         <Text align="left" bold>
           Noted:
@@ -180,7 +206,6 @@ const Home = () => {
           CLINIC'S COPY
         </Text>
         <Br />
-        <Br />
         <Text align="left" size={{ height: 1, width: 1 }}>
           DATE: <RealTimeDateTime />
         </Text>
@@ -191,6 +216,10 @@ const Home = () => {
         <Br />
         <Text align="left" size={{ height: 1, width: 1 }}>
           AGE/SEX: {formValues.age}/{formValues.sex}
+        </Text>
+        <Br />
+        <Text align="left" size={{ height: 1, width: 1 }}>
+          TOTAL AMOUNT: {formValues.amount}
         </Text>
         <Br />
         <Br />

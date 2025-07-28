@@ -87,9 +87,6 @@ app.post("/print", (req, res) => {
         console.error("Error releasing interface:", cleanupErr);
       }
     });
-
-    console.log("printerWasConnected");
-    console.log(printerWasConnected);
   }
 
   if (detached.length > 0) {
@@ -97,7 +94,6 @@ app.post("/print", (req, res) => {
   }
 
   lastDevices = devices;
-  printer.close();
 });
 
 app.listen(3001, () => {
