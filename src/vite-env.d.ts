@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_HOSPITAL_ADDRESS: string;
   readonly VITE_API_URL: string;
   readonly VITE_APP_NAME: string;
+  readonly VITE_ROUTE_APP_NAME: string;
 }
 
 interface ImportMeta {

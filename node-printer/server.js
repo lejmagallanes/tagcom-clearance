@@ -11,7 +11,19 @@ const TARGET_VENDOR_ID = 1046;
 const TARGET_PRODUCT_ID = 20497;
 
 const app = express();
-app.use(cors()); // ✅ Enable CORS for all origins
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:8000"], // ✅ Allow React and Laravel
+    credentials: true,
+  })
+);
+app.options(
+  "/print",
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.use(bodyParser.json({ limit: "1mb" }));
 
@@ -75,7 +87,7 @@ app.post("/print", (req, res) => {
       if (err) {
         console.error("Print error:", err);
       } else {
-        console.log("✅ Print sent successfully!");
+        console.log("Print sent successfully!");
       }
 
       try {

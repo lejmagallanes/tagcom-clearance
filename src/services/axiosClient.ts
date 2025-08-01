@@ -1,0 +1,130 @@
+import axios from "axios";
+import { observer } from "mobx-react";
+import { userStore } from "../stores/userstore";
+import router from "../routes/router";
+import type { SnackbarProps } from "@mui/material";
+
+axios.defaults.withCredentials = true;
+axios.defaults.withXSRFToken = true;
+
+const axiosClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+});
+
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("ACCESS_TOKEN");
+  config.headers.Authorization = `Bearer ${token}`;
+  config.params = {
+    ...config.params,
+  };
+  return config;
+});
+
+var message = "";
+var open = false;
+var severity = "success";
+
+axiosClient.interceptors.response.use(
+  function (response: any) {
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
+    message = "Transaction success.";
+    severity = "success";
+    switch (response.status) {
+      case 204:
+        if (["delete"].includes(response.config.method)) {
+          open = true;
+          userStore.setSnackBar({
+            open: open,
+            message: message,
+            alert: {
+              severity: severity,
+            },
+          });
+        }
+        break;
+      case 200:
+        if (["put", "post"].includes(response.config.method)) {
+          open = true;
+          if (response.data.message) message = response.data.message;
+          userStore.setSnackBar((prev: SnackbarProps) => ({
+            ...prev,
+            open: open,
+            message: message,
+            alert: {
+              severity: severity,
+            },
+          }));
+        }
+        break;
+      case 201:
+        open = true;
+        userStore.setSnackBar({
+          ...userStore.snackBar,
+          open: open,
+          message: message,
+          alert: {
+            severity: severity,
+          },
+        });
+        break;
+    }
+
+    return response;
+  },
+  function (error) {
+    severity = "error";
+    console.log(error);
+    console.log("error.status", error.status);
+
+    switch (error.status) {
+      case 401:
+        if (error.response.data.message) {
+          message = error.response.data.message;
+          console.log(error.response.data.message);
+          console.log("message", message);
+          open = true;
+        }
+        userStore.setToken(null);
+        break;
+      case 419:
+        userStore.setSessionMessage(
+          "Session token has expired. Please login again."
+        );
+        router.navigate("/login");
+        break;
+      case 403:
+        router.navigate("/unauthorized");
+        break;
+      case 405:
+        open = true;
+        message = "Request method not allowed";
+        break;
+      case 422:
+        open = true;
+        message = error.response.data.message ?? "Error";
+        break;
+      case 500:
+        console.log("error here");
+        open = true;
+        message = "Internal Server Error";
+        break;
+
+      case 503:
+        open = true;
+        message = "Service Unavailable";
+        break;
+    }
+    userStore.setSnackBar({
+      ...userStore.snackBar,
+      open: open,
+      message: message,
+      alert: {
+        severity: severity,
+      },
+    });
+    return Promise.reject(error);
+  }
+);
+
+export default observer(axiosClient);
