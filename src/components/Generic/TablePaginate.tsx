@@ -303,7 +303,7 @@ const TablePaginate = ({
                     })}
                     {actionButtons ?? (
                       <StyledTableCell>
-                        <Box flexDirection={"row"} display={"flex"}>
+                        <Box flexDirection={"row"} sx={{ display: "none" }}>
                           <Button
                             variant="outlined"
                             onClick={() =>

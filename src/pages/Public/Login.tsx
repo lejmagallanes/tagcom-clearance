@@ -25,8 +25,8 @@ const Login = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: "admin@tagcom.com",
-      password: "@magMa1234",
+      email: "",
+      password: "",
     },
     validationSchema: Yup.object({
       email: Yup.string().email("Invalid email address").required("Required"),
