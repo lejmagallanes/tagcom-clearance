@@ -8,12 +8,12 @@ import CssBaseline from "@mui/material/CssBaseline";
 const outerTheme = createTheme({
   palette: {
     primary: {
-      main: "#a8a194",
-      contrastText: "#ecebe2",
+      main: "#a8a194", // gray gold , bronco
+      contrastText: "#ecebe2", //light gray
     },
     secondary: {
-      main: "#e0d2b4",
-      contrastText: "#223745",
+      main: "#e0d2b4", // grain brown //lighter than gray gold
+      contrastText: "#223745", //Te Papa Green //bluegreen
     },
   },
   components: {
@@ -60,7 +60,7 @@ const outerTheme = createTheme({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider theme={outerTheme}>
-      <CssBaseline /> {/* Resets CSS to match theme */}
+      <CssBaseline />
       <App />
     </ThemeProvider>
   </StrictMode>

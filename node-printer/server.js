@@ -2,7 +2,7 @@ const express = require("express");
 const usb = require("usb");
 const fs = require("fs");
 
-const cors = require("cors"); // ✅ Import cors
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const escpos = require("escpos");
 escpos.USB = require("escpos-usb");
@@ -13,7 +13,7 @@ const TARGET_PRODUCT_ID = 20497;
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:8000"], // ✅ Allow React and Laravel
+    origin: ["http://localhost:5173", "http://localhost:8000"],
     credentials: true,
   })
 );
@@ -45,28 +45,18 @@ app.post("/print", (req, res) => {
   const detached = lastDeviceIds.filter((id) => !deviceIds.includes(id));
 
   if (attached.length > 0) {
-    console.log("Attached devices:", attached);
-
     const printer = devices.find(
       (d) =>
         d.deviceDescriptor.idVendor === TARGET_VENDOR_ID &&
         d.deviceDescriptor.idProduct === TARGET_PRODUCT_ID
     );
-    console.log("attached");
-    console.log(printer);
 
     if (printer && !printerWasConnected) {
-      console.log("Thermal printer attached");
       printerWasConnected = true;
     } else if (!printer && printerWasConnected) {
-      console.log("Thermal printer detached");
       printerWasConnected = false;
     }
-
     const escposTestPrint = data;
-    console.log("receiptData: -------");
-    console.log(escposTestPrint);
-
     printer.open();
 
     if (!printer) {

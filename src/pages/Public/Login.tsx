@@ -25,8 +25,8 @@ const Login = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: "",
-      password: "",
+      email: "admin@tagcom.com",
+      password: "@magMa1234",
     },
     validationSchema: Yup.object({
       email: Yup.string().email("Invalid email address").required("Required"),
@@ -48,6 +48,14 @@ const Login = () => {
         });
     },
   });
+
+  const formikErrorBool = (val: string) => {
+    return formik.touched[val] && Boolean(formik.errors[val]);
+  };
+  const formikErrorMsg = (val: string) => {
+    return <>{formik.touched[val] && formik.errors[val]}</>;
+  };
+
   return (
     <Grid
       container
@@ -82,10 +90,9 @@ const Login = () => {
                     fullWidth
                     value={formik.values.email}
                     onChange={formik.handleChange}
+                    error={formikErrorBool("email")}
+                    helperText={formikErrorMsg("email")}
                   />
-                  {formik.touched.name && formik.errors.name ? (
-                    <>{formik.errors.name}</>
-                  ) : null}
                 </Grid>
                 <Grid size={12}>
                   <TextField
@@ -97,10 +104,9 @@ const Login = () => {
                     fullWidth
                     value={formik.values.password}
                     onChange={formik.handleChange}
+                    error={formikErrorBool("password")}
+                    helperText={formikErrorMsg("password")}
                   />
-                  {formik.touched.password && formik.errors.password ? (
-                    <>{formik.errors.password}</>
-                  ) : null}
                 </Grid>
                 <Button
                   type="submit"

@@ -10,6 +10,17 @@ interface DeleteModalConfirmationProps {
   model: any;
   selectedItem: any;
 }
+
+export const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  bgcolor: "background.paper",
+  p: 4,
+  borderRadius: "1em",
+};
+
 const DeleteModalConfirmation = ({
   children,
   open,
@@ -17,16 +28,6 @@ const DeleteModalConfirmation = ({
   model,
   selectedItem,
 }: DeleteModalConfirmationProps) => {
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    bgcolor: "background.paper",
-    p: 4,
-    borderRadius: "1em",
-  };
-
   return (
     <Modal
       open={open}
@@ -34,7 +35,7 @@ const DeleteModalConfirmation = ({
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Box sx={style}>
+      <Box sx={modalStyle}>
         <Typography
           variant="h6"
           fontWeight={"bold"}

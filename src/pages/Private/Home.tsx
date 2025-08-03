@@ -55,7 +55,7 @@ const Home = () => {
         </Box>
         <TabPanel value="1">
           <StyledTabPanel>
-            <ClearanceForm />
+            <ClearanceForm item={{}} />
           </StyledTabPanel>
         </TabPanel>
         <TabPanel value="2">

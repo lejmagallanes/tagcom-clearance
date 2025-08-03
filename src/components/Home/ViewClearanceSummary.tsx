@@ -1,11 +1,12 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Modal, Stack, Typography } from "@mui/material";
 import { formateDate } from "../../services/datetime";
 import TablePaginate, {
   type TableColumnsProps,
 } from "../Generic/TablePaginate";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import axiosClient from "../../services/axiosClient";
-import dayjs from "dayjs";
+import { Delete, Edit } from "@mui/icons-material";
+import ClearanceForm from "./ClearanceForm";
+import { useState } from "react";
+import { modalStyle } from "../Generic/DeleteModalConfirmation";
 
 export default function ViewClearanceSummary() {
   const columns: TableColumnsProps[] = [
@@ -13,7 +14,7 @@ export default function ViewClearanceSummary() {
     { label: "Name", field: "name", minWidth: 250 },
     { label: "Age", field: "age", minWidth: 80 },
     { label: "Sex", field: "sex", minWidth: 80 },
-    { label: "Amount(Php)", field: "amount", minWidth: 150 },
+    { label: "Amount(PhP)", field: "amount", minWidth: 150 },
     {
       label: "Created By",
       field: "created_by?.name",
@@ -48,30 +49,6 @@ export default function ViewClearanceSummary() {
 
   const apiUrl = "/clearance";
 
-  async function requestExportToXLS() {
-    try {
-      const response = await axiosClient.get("/export-clearance", {
-        responseType: "blob",
-      });
-
-      console.log(response);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-
-      const currentDate = dayjs(); // Get current date as a Day.js object
-      const formattedDate = currentDate.format("YYYY-MM-DD-HH-mm-a");
-
-      let filename = `tagcom_clearance_${formattedDate}.xlsx`;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error("Download failed:", error);
-    }
-  }
-
   const DeleteWarningMessage = () => {
     return (
       <>
@@ -88,27 +65,83 @@ export default function ViewClearanceSummary() {
     );
   };
 
+  const [openCLDialog, setOpenCFDialog] = useState(false);
+
+  const closeCLForm = () => {
+    setOpenCFDialog(false);
+  };
+
+  const [selectedItem, setSelectedItem] = useState<any>({});
+
+  const actionButtons = (props: any) => {
+    return (
+      <Stack direction={"row"}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setSelectedItem(props);
+            setOpenCFDialog(true);
+          }}
+          sx={{ margin: 1 }}
+          startIcon={<Edit />}
+        >
+          Edit
+        </Button>
+      </Stack>
+    );
+  };
+
+  interface ClearanceFormDialog {
+    open: boolean;
+    onClose: () => void;
+    formValues: any;
+    setReload?: React.Dispatch<React.SetStateAction<boolean>>;
+  }
+
+  //open dialog for clearance form to edit data
+  const ClearanceFormDialog = ({
+    open,
+    onClose,
+    formValues,
+    setReload,
+  }: ClearanceFormDialog) => {
+    return (
+      <Modal
+        open={open}
+        onClose={onClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={modalStyle}>
+          <ClearanceForm
+            item={formValues}
+            closeCFDialog={onClose}
+            setReload={setReload}
+          />
+        </Box>
+      </Modal>
+    );
+  };
+
+  const [reload, setReload] = useState<boolean>(false);
   return (
     <Box>
+      <ClearanceFormDialog
+        open={openCLDialog}
+        onClose={closeCLForm}
+        formValues={selectedItem}
+        setReload={setReload}
+      />
       <TablePaginate
         model={model}
         columns={columns}
-        itemsPerPage={10}
+        itemsPerPageOptions={[10, 25, 50]}
+        itemsPerPageDefault={10}
         apiUrl={apiUrl}
         primaryKey="clearance"
-        customHeaderAction={
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<ExitToAppIcon />}
-              size="large"
-              sx={{ mb: 1 }}
-              onClick={requestExportToXLS}
-            >
-              Export to XLS
-            </Button>
-          </Box>
-        }
+        exportable={true}
+        actionButtons={actionButtons}
+        reload={reload}
       >
         <DeleteWarningMessage />
       </TablePaginate>

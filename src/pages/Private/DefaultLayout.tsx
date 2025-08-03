@@ -30,7 +30,6 @@ const DefaultLayout = observer(() => {
   const navigate = useNavigate();
 
   const auth = localStorage.getItem("user");
-  console.log("auth", auth);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);

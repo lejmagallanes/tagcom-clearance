@@ -24,25 +24,68 @@ import { useFormik, type FormikValues, type FormikProps } from "formik";
 import { observer } from "mobx-react-lite";
 import PrintableReceipt from "./PrintableReceipt";
 import { clearanceValidation } from "../../services/formikValidations";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import axiosClient from "../../services/axiosClient";
 
-const ClearanceForm = () => {
+type ClearanceFormProps = {
+  item?: any;
+  closeCFDialog?: () => void;
+  setReload?: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const ClearanceForm: React.FC<ClearanceFormProps> = ({
+  item = {},
+  closeCFDialog = () => {},
+  setReload,
+}) => {
   const [openClearanceDialog, setOpenClearanceDialog] = useState(false);
+  const initialValues = useMemo(() => {
+    if (Object.keys(item).length) {
+      return {
+        datetime: dayjs(item?.datetime),
+        name: item?.name,
+        age: item?.age,
+        sex: item?.sex,
+        amount: item?.amount,
+      };
+    }
 
-  const formik = useFormik({
-    initialValues: {
+    return {
       datetime: dayjs(),
       name: "",
       age: "0",
       sex: "Male",
       amount: "0",
-    },
+    };
+  }, [item]);
+
+  const formik = useFormik({
+    initialValues: initialValues,
     validationSchema: clearanceValidation,
+    enableReinitialize: true,
     onSubmit: (values: FormikValues) => {
-      formik.setValues((prev: FormikValues) => ({
-        ...prev,
+      const updatedValues = {
+        ...values,
         name: values.name.toUpperCase(),
-      }));
+      };
+
+      //if with item, update directly to db, no
+      if (Object.keys(item).length !== 0) {
+        axiosClient
+          .put(`/clearance/${item?.id}`, updatedValues)
+          .then(() => {
+            closeCFDialog();
+            setReload?.(true);
+          })
+          .catch((error: any) => {
+            if (error?.response?.data?.errors) {
+              formik.setErrors(error?.response?.data?.errors);
+            }
+          });
+        return;
+      }
+
+      formik.setValues(updatedValues);
       setOpenClearanceDialog(true);
     },
   });
@@ -51,7 +94,7 @@ const ClearanceForm = () => {
     if (newDate) {
       formik.setValues((prev: any) => ({
         ...prev,
-        date: newDate,
+        datetime: newDate,
       }));
     }
   };
@@ -83,9 +126,9 @@ const ClearanceForm = () => {
                       fullWidth: true,
                     },
                   }}
-                  disabled
                   name="datetime"
                   value={formik.values.datetime}
+                  disabled={Object.keys(item).length !== 0 ? false : true}
                   onChange={handleDateChange}
                 />
               </LocalizationProvider>
@@ -188,7 +231,7 @@ const ClearanceForm = () => {
             sx={{ width: "20vh", mt: 5, alignSelf: "right" }}
             type="submit"
           >
-            View Clearance Slip
+            {item ? "Save Changes" : "View Clearance Slip"}
           </Button>
         </Grid>
       </form>

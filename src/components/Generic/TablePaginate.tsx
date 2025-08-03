@@ -18,6 +18,7 @@ import {
   Stack,
   styled,
   type TableCellProps,
+  Checkbox,
 } from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,13 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import { red } from "@mui/material/colors";
 import axiosClient from "../../services/axiosClient";
 import DeleteModalConfirmation from "./DeleteModalConfirmation";
+import DateRangeSelector from "./DateRangePicker";
+import dayjs from "dayjs";
+import {
+  ExitToApp,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
 
 export interface TableColumnsProps {
   label: string;
@@ -47,21 +55,26 @@ export interface TablePaginateProps {
   model: any;
   customHeaderAction?: ReactNode;
   columns: TableColumnsProps[];
-  itemsPerPage: number;
+  itemsPerPageOptions: number[];
   apiUrl: string;
-  actionButtons?: ReactNode;
+  actionButtons?: (item: any) => void | ReactNode;
   primaryKey: string;
+  itemsPerPageDefault: number;
+  exportable: boolean;
+  reload?: boolean;
 }
 
 const TablePaginate = ({
   children,
   model,
-  customHeaderAction,
   columns,
-  itemsPerPage = 10,
+  itemsPerPageOptions = [5, 25, 50],
   apiUrl,
   actionButtons,
   primaryKey,
+  itemsPerPageDefault = 10,
+  exportable = true,
+  reload,
 }: TablePaginateProps) => {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -69,7 +82,7 @@ const TablePaginate = ({
   const [currentPage, setCurrentPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(itemsPerPageDefault);
   const [loadingData, setLoadingData] = React.useState(false);
   const [searchKeyword, setSearchKeyword] = React.useState("");
   const [open, setOpen] = React.useState(false);
@@ -80,22 +93,65 @@ const TablePaginate = ({
 
   const [debouncedQuery, setDebouncedQuery] = useState(""); // Store the debounced query
 
+  const [selectedDateRange, setSelectedRange] = useState({
+    start: new Date(),
+    end: new Date(),
+  });
+
+  const handleDateChange = (start: Date, end: Date) => {
+    setSelectedRange({
+      start: start,
+      end: end,
+    });
+  };
+
+  const [filterByDateRange, setFilterByDateRange] = useState(false);
+
+  const [from, setFrom] = useState(0);
+  const [to, setTo] = useState(0);
+
+  const handleChangeDateCheckbox = () => {
+    setFilterByDateRange((prev) => !prev);
+  };
+
   const fetchItems = async (page = 1) => {
     setLoadingData(true);
+
     try {
-      const response = await axiosClient.get(
-        `${apiUrl}?page=${page}&per_page=${rowsPerPage}&searchKeyword=${searchKeyword}`
-      );
+      let url = `${apiUrl}?page=${page}&per_page=${rowsPerPage}&searchKeyword=${searchKeyword}`;
+
+      if (filterByDateRange) {
+        //format start date and end date to
+
+        let start = dayjs(selectedDateRange.start).format(
+          "YYYY-MM-DD 00:00:00"
+        );
+        let end = dayjs(selectedDateRange.end).format("YYYY-MM-DD 23:59:59");
+        url = `${url}&date_from=${start}&date_to=${end}`;
+      }
+
+      const response = await axiosClient.get(url);
       const data = await response.data;
 
+      //check here if sobra ang current page sa last_page page, balik sa page 1,
+
+      //frontend, adding number per item, matching the from - to of <itemtotalcount>
       let fromCount = data.meta.from;
-
       var res: any = [...data.data];
-
       if (res.length) {
         res.map((obj: any) => (obj.count = fromCount++));
       }
 
+      if (data.meta.current_page > data.meta.last_page) {
+        // Requested page too high — go to last valid page
+        const lastValidPage = Math.max(data.meta.last_page - 1, 0);
+        setPage(0);
+        fetchItems(lastValidPage);
+        return;
+      }
+
+      setFrom(data.meta.from);
+      setTo(data.meta.to);
       // Simulate fetching data (replace with actual API call)
       setTimeout(() => {
         // If data is fetched quickly, we wait 2 seconds before setting loading to false
@@ -117,15 +173,8 @@ const TablePaginate = ({
 
   // Effect to fetch data when the component mounts or when the page changes
   useEffect(() => {
-    if (debouncedQuery) {
-      setCurrentPage(0);
-      fetchItems(1);
-    } else {
-      fetchItems(currentPage + 1);
-    }
-
-    // +1 because Laravel pages are 1-indexed
-  }, [currentPage, page, rowsPerPage, debouncedQuery]);
+    fetchItems(currentPage + 1);
+  }, [currentPage, page, rowsPerPage, reload]);
 
   // Handle page change (pagination)
   const handlePageChange = (
@@ -138,6 +187,7 @@ const TablePaginate = ({
   // Handle rows per page change
   const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(event.target.value);
+    setCurrentPage(0);
     setPage(0); // Reset to first page when rows per page change
   };
 
@@ -189,7 +239,36 @@ const TablePaginate = ({
 
   const StyledTableCell = styled(TableCell, {
     shouldForwardProp: (prop) => prop !== "primary",
-  })<TableCellProps>(() => ({ padding: "5px" }));
+  })<TableCellProps>(() => ({ padding: "1px" }));
+
+  useEffect(() => {}, [selectedDateRange]);
+
+  async function requestExportToXLS() {
+    try {
+      const response = await axiosClient.get("/export-clearance", {
+        responseType: "blob",
+        params: {
+          start_date: filterByDateRange ? selectedDateRange.start : null,
+          end_date: filterByDateRange ? selectedDateRange.end : null,
+          searchKeyWord: searchKeyword,
+        },
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      const currentDate = dayjs(); // Get current date as a Day.js object
+      const formattedDate = currentDate.format("YYYY-MM-DD-HH-mm-a");
+
+      let filename = `tagcom_clearance_${formattedDate}.xlsx`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  }
 
   return (
     <Box margin={10} marginTop={0}>
@@ -204,40 +283,77 @@ const TablePaginate = ({
           <h1>{model?.label ?? ""}</h1>
         </div>
       )}
-      <Box flex={1} flexDirection={"column"}>
-        <Stack direction={"row"}>
-          <Box flex={1} alignContent={"center"} textAlign={"left"}>
-            {customHeaderAction}
+      <Box flexDirection={"column"}>
+        <Stack className="main-tableheader-actions" direction={"row"}>
+          <Box flex={1}>
+            <Stack direction="row" className="left-table-actions">
+              <Box flex={1} alignContent={"center"} textAlign={"left"}>
+                {exportable && (
+                  <Box>
+                    <Stack direction="row">
+                      <Button
+                        variant="outlined"
+                        startIcon={<ExitToApp />}
+                        size="large"
+                        sx={{ mb: 1 }}
+                        onClick={requestExportToXLS}
+                      >
+                        Export to XLSX
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
+            </Stack>
           </Box>
-          <Box>
-            <FormControl sx={{ mb: 1, width: "400px" }}>
-              <InputLabel htmlFor="outlined-adornment-amount">
-                Search
-              </InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-amount"
-                startAdornment={
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                }
-                size="small"
-                endAdornment={
-                  <InputAdornment position="start">
-                    <IconButton
-                      aria-label={"clear search"}
-                      onClick={handleClearKeyword}
-                      edge="end"
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                }
-                value={searchKeyword}
-                label="Amount"
-                onChange={handleSearchChange}
+          <Box flex={1}>
+            <Stack direction={"row"} className="right-table-actions">
+              <DateRangeSelector
+                onDateChange={handleDateChange}
+                enable={filterByDateRange}
               />
-            </FormControl>
+              <Checkbox
+                checked={filterByDateRange}
+                onChange={handleChangeDateCheckbox}
+                // sx={{ "& .MuiButtonBase-root": { padding: 0 } }}
+              />
+              <FormControl sx={{ width: "400px" }}>
+                <InputLabel htmlFor="outlined-adornment-amount">
+                  Search
+                </InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-amount"
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  }
+                  size="small"
+                  endAdornment={
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label={"clear search"}
+                        onClick={handleClearKeyword}
+                        edge="end"
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  value={searchKeyword}
+                  label="Amount"
+                  onChange={handleSearchChange}
+                />
+              </FormControl>
+              <Button
+                variant="outlined"
+                onClick={() => fetchItems()}
+                size="medium"
+                sx={{ ml: 1 }}
+              >
+                Search
+              </Button>
+            </Stack>
           </Box>
         </Stack>
       </Box>
@@ -251,7 +367,7 @@ const TablePaginate = ({
             borderStyle: "solid",
           }}
         >
-          <Table stickyHeader aria-label="sticky table">
+          <Table>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ minWidth: "50px" }} />
@@ -269,7 +385,7 @@ const TablePaginate = ({
                     <Typography fontWeight={"bold"}>{column.label}</Typography>
                   </TableCell>
                 ))}
-                <StyledTableCell>
+                <StyledTableCell width={"500px"}>
                   <Typography fontWeight={"bold"}>Action</Typography>
                 </StyledTableCell>
               </TableRow>
@@ -277,7 +393,7 @@ const TablePaginate = ({
             <TableBody>
               {loadingData ? (
                 <TableRow>
-                  <StyledTableCell colSpan={columns.length}>
+                  <StyledTableCell colSpan={columns.length + 2}>
                     <LinearProgress />
                   </StyledTableCell>
                 </TableRow>
@@ -301,47 +417,28 @@ const TablePaginate = ({
                         </StyledTableCell>
                       );
                     })}
-                    {actionButtons ?? (
-                      <StyledTableCell>
-                        <Box flexDirection={"row"} sx={{ display: "none" }}>
-                          <Button
-                            variant="outlined"
-                            onClick={() =>
-                              navigate(
-                                `${model.route}/${item.id ?? item[primaryKey]}`
-                              )
-                            }
-                            startIcon={<EditIcon />}
-                            style={{
-                              marginRight: 3,
-                              marginLeft: 3,
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setOpen(true);
-                            }}
-                            startIcon={<DeleteIcon />}
-                            style={{
-                              marginRight: 3,
-                              marginLeft: 3,
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </Box>
-                      </StyledTableCell>
-                    )}
+                    <TableCell>
+                      <Stack direction={"row"}>
+                        {actionButtons ? <>{actionButtons(item)}</> : null}
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setOpen(true);
+                          }}
+                          sx={{ margin: 1 }}
+                          startIcon={<DeleteIcon />}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <StyledTableCell
-                    colSpan={columns.length}
+                    colSpan={columns.length + 2}
                     style={{ textAlign: "center" }}
                   >
                     No records to be displayed.
@@ -353,13 +450,15 @@ const TablePaginate = ({
         </TableContainer>
         {/* Material UI Pagination */}
         <TablePagination
-          rowsPerPageOptions={[itemsPerPage, 25, 50]}
+          rowsPerPageOptions={itemsPerPageOptions}
           component="div"
           count={totalItems}
           rowsPerPage={rowsPerPage}
           page={currentPage}
           onPageChange={handlePageChange}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelDisplayedRows={() => `${from}–${to} of ${totalItems}`}
+          ActionsComponent={CustomTablePaginationActions}
         />
       </div>
       <DeleteModalConfirmation
@@ -403,3 +502,35 @@ const TablePaginate = ({
 };
 
 export default observer(TablePaginate);
+
+const CustomTablePaginationActions = (props: {
+  count: number;
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    newPage: number
+  ) => void;
+}) => {
+  const { count, page, rowsPerPage, onPageChange } = props;
+  const totalPages = Math.ceil(count / rowsPerPage);
+
+  const handleBack = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onPageChange(event, page - 1);
+  };
+
+  const handleNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onPageChange(event, page + 1);
+  };
+
+  return (
+    <Box sx={{ flexShrink: 0, ml: 2 }}>
+      <IconButton onClick={handleBack} disabled={page === 0}>
+        <KeyboardArrowLeft />
+      </IconButton>
+      <IconButton onClick={handleNext} disabled={page >= totalPages - 1}>
+        <KeyboardArrowRight />
+      </IconButton>
+    </Box>
+  );
+};

@@ -128,17 +128,11 @@ const PrintableReceipt = ({
       await axiosClient
         .post("/clearance", formValues)
         .then(() => {
-          console.log("success storing");
-          console.log(formik.initialValues);
           formik.setValues(formik.initialValues);
-          console.log(JSON.stringify(formik.errors));
           formik.setStatus(formik.initialStatus);
           formik.resetForm();
-          console.log("---after ser errors to blank");
-          console.log(JSON.stringify(formik.errors));
         })
         .catch((error: any) => {
-          console.log(error.response.data.errors);
           if (error.response.data.errors) {
             formik.setErrors(error.response.data.errors);
           }

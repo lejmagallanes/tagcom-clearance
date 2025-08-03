@@ -30,10 +30,10 @@ axiosClient.interceptors.response.use(
     // Do something with response data
     message = "Transaction success.";
     severity = "success";
+    open = true;
     switch (response.status) {
       case 204:
         if (["delete"].includes(response.config.method)) {
-          open = true;
           userStore.setSnackBar({
             open: open,
             message: message,
@@ -45,20 +45,18 @@ axiosClient.interceptors.response.use(
         break;
       case 200:
         if (["put", "post"].includes(response.config.method)) {
-          open = true;
           if (response.data.message) message = response.data.message;
-          userStore.setSnackBar((prev: SnackbarProps) => ({
-            ...prev,
+          userStore.setSnackBar({
+            ...userStore.snackBar,
             open: open,
             message: message,
             alert: {
               severity: severity,
             },
-          }));
+          });
         }
         break;
       case 201:
-        open = true;
         userStore.setSnackBar({
           ...userStore.snackBar,
           open: open,
@@ -75,14 +73,10 @@ axiosClient.interceptors.response.use(
   function (error) {
     severity = "error";
     console.log(error);
-    console.log("error.status", error.status);
-
     switch (error.status) {
       case 401:
         if (error.response.data.message) {
           message = error.response.data.message;
-          console.log(error.response.data.message);
-          console.log("message", message);
           open = true;
         }
         userStore.setToken(null);
@@ -105,7 +99,6 @@ axiosClient.interceptors.response.use(
         message = error.response.data.message ?? "Error";
         break;
       case 500:
-        console.log("error here");
         open = true;
         message = "Internal Server Error";
         break;

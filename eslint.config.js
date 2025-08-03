@@ -21,7 +21,7 @@ export default tseslint.config([
     },
     env: {
       browser: true,
-      node: true, // ✅ Add this line
+      node: true,
       es2021: true,
     },
   },
