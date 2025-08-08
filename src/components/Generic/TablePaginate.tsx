@@ -21,10 +21,8 @@ import {
   Checkbox,
 } from "@mui/material";
 
-import { useNavigate } from "react-router-dom";
 import { observer } from "mobx-react";
 import React, { useEffect, useState, type ReactNode } from "react";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -76,7 +74,6 @@ const TablePaginate = ({
   exportable = true,
   reload,
 }: TablePaginateProps) => {
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [_, setPageCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -91,7 +88,7 @@ const TablePaginate = ({
   const [selectedItem, setSelectedItem] = useState<any>(null);
   let dataFetchTimeout = 500;
 
-  const [debouncedQuery, setDebouncedQuery] = useState(""); // Store the debounced query
+  const [_, setDebouncedQuery] = useState(""); // Store the debounced query
 
   const [selectedDateRange, setSelectedRange] = useState({
     start: new Date(),

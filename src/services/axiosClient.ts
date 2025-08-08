@@ -2,7 +2,6 @@ import axios from "axios";
 import { observer } from "mobx-react";
 import { userStore } from "../stores/userstore";
 import router from "../routes/router";
-import type { SnackbarProps } from "@mui/material";
 
 axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;

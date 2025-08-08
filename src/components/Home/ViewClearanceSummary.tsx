@@ -3,7 +3,7 @@ import { formateDate } from "../../services/datetime";
 import TablePaginate, {
   type TableColumnsProps,
 } from "../Generic/TablePaginate";
-import { Delete, Edit } from "@mui/icons-material";
+import { Edit } from "@mui/icons-material";
 import ClearanceForm from "./ClearanceForm";
 import { useState } from "react";
 import { modalStyle } from "../Generic/DeleteModalConfirmation";
