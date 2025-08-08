@@ -75,7 +75,6 @@ const TablePaginate = ({
   reload,
 }: TablePaginateProps) => {
   const [items, setItems] = useState([]);
-  const [_, setPageCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = React.useState(0);
@@ -87,8 +86,6 @@ const TablePaginate = ({
   const handleClose = () => setOpen(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   let dataFetchTimeout = 500;
-
-  const [_, setDebouncedQuery] = useState(""); // Store the debounced query
 
   const [selectedDateRange, setSelectedRange] = useState({
     start: new Date(),
@@ -147,7 +144,6 @@ const TablePaginate = ({
         setTimeout(() => {
           setLoadingData(false);
           setItems(res);
-          setPageCount(data.last_page);
           setTotalItems(data.meta.total);
           setLoadingData(false);
         }, dataFetchTimeout);
@@ -202,7 +198,7 @@ const TablePaginate = ({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(searchKeyword);
+      console.log("debounce");
     }, 800);
 
     return () => clearTimeout(timer);
