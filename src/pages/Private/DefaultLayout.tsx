@@ -118,11 +118,6 @@ const DefaultLayout = observer(() => {
       <Box
         component="main"
         sx={{
-          // display: "flex",
-          // alignItems: "center",
-          // justifyContent: "center",
-          // minHeight: "calc(100vh - 64px)", // subtract AppBar height
-          // flex: 1,
           flexGrow: 1,
           overflowY: "auto",
           padding: "16px",

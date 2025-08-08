@@ -121,8 +121,6 @@ const TablePaginate = ({
       let url = `${apiUrl}?page=${page}&per_page=${rowsPerPage}&searchKeyword=${searchKeyword}`;
 
       if (filterByDateRange) {
-        //format start date and end date to
-
         let start = dayjs(selectedDateRange.start).format(
           "YYYY-MM-DD 00:00:00"
         );
@@ -133,9 +131,6 @@ const TablePaginate = ({
       const response = await axiosClient.get(url);
       const data = await response.data;
 
-      //check here if sobra ang current page sa last_page page, balik sa page 1,
-
-      //frontend, adding number per item, matching the from - to of <itemtotalcount>
       let fromCount = data.meta.from;
       var res: any = [...data.data];
       if (res.length) {
@@ -143,7 +138,6 @@ const TablePaginate = ({
       }
 
       if (data.meta.current_page > data.meta.last_page) {
-        // Requested page too high — go to last valid page
         const lastValidPage = Math.max(data.meta.last_page - 1, 0);
         setPage(0);
         fetchItems(lastValidPage);
@@ -152,18 +146,14 @@ const TablePaginate = ({
 
       setFrom(data.meta.from);
       setTo(data.meta.to);
-      // Simulate fetching data (replace with actual API call)
       setTimeout(() => {
-        // If data is fetched quickly, we wait 2 seconds before setting loading to false
         setTimeout(() => {
           setLoadingData(false);
-          setItems(res); // Data for the current page
-          setPageCount(data.last_page); // Total number of pages
-          setTotalItems(data.meta.total); // Total number of items
+          setItems(res);
+          setPageCount(data.last_page);
+          setTotalItems(data.meta.total);
           setLoadingData(false);
-        }, dataFetchTimeout); // Delay 2 seconds before setting loading to false
-
-        // If data takes longer, we don't clear the timeout above but let it finish
+        }, dataFetchTimeout);
       }, 800);
     } catch (error) {
       setLoadingData(false);
@@ -171,12 +161,10 @@ const TablePaginate = ({
     }
   };
 
-  // Effect to fetch data when the component mounts or when the page changes
   useEffect(() => {
     fetchItems(currentPage + 1);
   }, [currentPage, page, rowsPerPage, reload]);
 
-  // Handle page change (pagination)
   const handlePageChange = (
     _: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
     newPage: number
@@ -184,20 +172,17 @@ const TablePaginate = ({
     setCurrentPage(newPage);
   };
 
-  // Handle rows per page change
   const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(event.target.value);
     setCurrentPage(0);
-    setPage(0); // Reset to first page when rows per page change
+    setPage(0);
   };
 
-  // Utility function to get nested field value
   const getNestedValue = (item: any, path: any) => {
     return path.split("?.").reduce((acc: any, part: any) => acc?.[part], item);
   };
 
   const deleteRow = () => {
-    // open delete modal for confirmation
     try {
       axiosClient
         .delete(`${apiUrl}/${selectedItem.id ?? selectedItem[primaryKey]}`)
@@ -220,17 +205,14 @@ const TablePaginate = ({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(searchKeyword); // Set the debounced query after the timeout
-    }, 800); // 500ms debounce delay
+      setDebouncedQuery(searchKeyword);
+    }, 800);
 
-    // Cleanup the previous timeout if the query changes before the debounce time
     return () => clearTimeout(timer);
   }, [searchKeyword]);
 
-  // Only run when debouncedQuery changes
-  // Handle the input change event
   const handleSearchChange = (e: any) => {
-    setSearchKeyword(e.target.value); // Update the query as the user types
+    setSearchKeyword(e.target.value);
   };
 
   const handleClearKeyword = () => {
@@ -257,7 +239,7 @@ const TablePaginate = ({
       const link = document.createElement("a");
       link.href = url;
 
-      const currentDate = dayjs(); // Get current date as a Day.js object
+      const currentDate = dayjs();
       const formattedDate = currentDate.format("YYYY-MM-DD-HH-mm-a");
 
       let filename = `tagcom_clearance_${formattedDate}.xlsx`;
@@ -315,7 +297,6 @@ const TablePaginate = ({
               <Checkbox
                 checked={filterByDateRange}
                 onChange={handleChangeDateCheckbox}
-                // sx={{ "& .MuiButtonBase-root": { padding: 0 } }}
               />
               <FormControl sx={{ width: "400px" }}>
                 <InputLabel htmlFor="outlined-adornment-amount">

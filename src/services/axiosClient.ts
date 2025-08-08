@@ -26,8 +26,6 @@ var severity = "success";
 
 axiosClient.interceptors.response.use(
   function (response: any) {
-    // Any status code that lie within the range of 2xx cause this function to trigger
-    // Do something with response data
     message = "Transaction success.";
     severity = "success";
     open = true;

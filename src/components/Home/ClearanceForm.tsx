@@ -69,7 +69,6 @@ const ClearanceForm: React.FC<ClearanceFormProps> = ({
         name: values.name.toUpperCase(),
       };
 
-      //if with item, update directly to db, no
       if (Object.keys(item).length !== 0) {
         axiosClient
           .put(`/clearance/${item?.id}`, updatedValues)

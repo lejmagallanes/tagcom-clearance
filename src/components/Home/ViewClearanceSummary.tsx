@@ -98,7 +98,6 @@ export default function ViewClearanceSummary() {
     setReload?: React.Dispatch<React.SetStateAction<boolean>>;
   }
 
-  //open dialog for clearance form to edit data
   const ClearanceFormDialog = ({
     open,
     onClose,
