@@ -125,25 +125,34 @@ const PrintableReceipt = ({
         </Printer>
       );
 
-      await axiosClient
-        .post("/clearance", formValues)
-        .then(() => {
-          formik.setValues(formik.initialValues);
-          formik.setStatus(formik.initialStatus);
-          formik.resetForm();
+      await axios
+        .post("http://localhost:3001/print", {
+          data: Array.from(buffer),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data: "Hello Printer" }),
         })
-        .catch((error: any) => {
-          if (error.response.data.errors) {
-            formik.setErrors(error.response.data.errors);
-          }
+        .then(async (res) => {
+          await axiosClient
+            .post("/clearance", formValues)
+            .then(() => {
+              formik.setValues(formik.initialValues);
+              formik.setStatus(formik.initialStatus);
+              formik.resetForm();
+            })
+            .catch((error: any) => {
+              if (error.response.data.errors) {
+                formik.setErrors(error.response.data.errors);
+              }
+            })
+            .finally(() => {
+              onClose();
+            });
         })
-        .finally(() => {
-          onClose();
+        .catch((er) => {
+          console.log(er);
         });
-
-      await axios.post("http://localhost:3001/print", {
-        data: Array.from(buffer),
-      });
     } catch (e) {
       console.log(e);
     }

@@ -1,105 +1,79 @@
 const express = require("express");
 const usb = require("usb");
-const fs = require("fs");
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const escpos = require("escpos");
+const escpos = require("escpos"); // escpos for compatibility if later you want text printing
 escpos.USB = require("escpos-usb");
 
-const TARGET_VENDOR_ID = 1046;
-const TARGET_PRODUCT_ID = 20497;
+// Replace these IDs with your printer’s vendorId/productId
+const TARGET_VENDOR_ID = 1046; // Example: 0x0416
+const TARGET_PRODUCT_ID = 20497; // Example: 0x5001
 
 const app = express();
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://localhost:8000"],
     credentials: true,
   })
 );
-app.options(
-  "/print",
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
-
 app.use(bodyParser.json({ limit: "1mb" }));
 
 app.post("/print", (req, res) => {
   const { data } = req.body;
-  if (!data) return res.status(400).send("No data");
 
-  let lastDevices = [];
-  const devices = usb.getDeviceList();
+  if (!data) {
+    return res.status(400).send("No data provided");
+  }
 
-  const deviceIds = devices.map(
-    (d) => `${d.deviceDescriptor.idVendor}:${d.deviceDescriptor.idProduct}`
-  );
-  const lastDeviceIds = lastDevices.map(
-    (d) => `${d.deviceDescriptor.idVendor}:${d.deviceDescriptor.idProduct}`
-  );
+  // Open the printer by Vendor ID and Product ID
+  const printer = usb.findByIds(TARGET_VENDOR_ID, TARGET_PRODUCT_ID);
+  if (!printer) {
+    console.error("Printer not found");
+    return res.status(404).send("Printer not found");
+  }
 
-  const attached = deviceIds.filter((id) => !lastDeviceIds.includes(id));
-  const detached = lastDeviceIds.filter((id) => !deviceIds.includes(id));
-
-  if (attached.length > 0) {
-    const printer = devices.find(
-      (d) =>
-        d.deviceDescriptor.idVendor === TARGET_VENDOR_ID &&
-        d.deviceDescriptor.idProduct === TARGET_PRODUCT_ID
-    );
-
-    if (printer && !printerWasConnected) {
-      printerWasConnected = true;
-    } else if (!printer && printerWasConnected) {
-      printerWasConnected = false;
-    }
-    const escposTestPrint = data;
+  try {
     printer.open();
-
-    if (!printer) {
-      console.log("Printer not found.");
-      return;
-    }
-
     const iface = printer.interfaces[0];
     iface.claim();
 
     const endpoint = iface.endpoints.find((ep) => ep.direction === "out");
     if (!endpoint) {
-      console.log("No output endpoint found.");
-      return;
+      console.error("No output endpoint found");
+      return res.status(500).send("No output endpoint");
     }
 
-    endpoint.transfer(escposTestPrint, (err) => {
+    // If passed data is already an ESC/POS byte array
+    let payload;
+    if (Array.isArray(data)) {
+      payload = Buffer.from(data);
+    } else if (typeof data === "string") {
+      payload = Buffer.from(data, "utf8");
+    } else {
+      return res.status(400).send("Invalid data format");
+    }
+
+    endpoint.transfer(payload, (err) => {
       if (err) {
         console.error("Print error:", err);
+        res.status(500).send("Print error");
       } else {
         console.log("Print sent successfully!");
+        res.json({ success: true });
       }
 
-      try {
-        iface.release(true, () => {
-          printer.close();
-        });
-      } catch (cleanupErr) {
+      // Always release after transfer
+      iface.release(true, () => {
         printer.close();
-        console.error("Error releasing interface:", cleanupErr);
-      }
+      });
     });
+  } catch (err) {
+    console.error("Exception during print:", err);
+    return res.status(500).send("Printer error");
   }
-
-  if (detached.length > 0) {
-    console.log("Detached devices:", detached);
-  }
-
-  lastDevices = devices;
 });
 
 app.listen(3001, () => {
-  console.log("Printer server running on http://localhost:3001");
+  console.log("Printer server running at http://localhost:3001");
 });
-
-let printerWasConnected = false;
