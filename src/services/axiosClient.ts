@@ -78,6 +78,7 @@ axiosClient.interceptors.response.use(
           open = true;
         }
         userStore.setToken(null);
+        router.navigate("/login");
         break;
       case 419:
         userStore.setSessionMessage(
