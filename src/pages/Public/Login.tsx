@@ -110,7 +110,7 @@ const Login = () => {
                 </Grid>
                 <Button
                   type="submit"
-                  variant="outlined"
+                  variant="contained"
                   sx={{ width: "20vh", mt: 5, alignSelf: "right" }}
                 >
                   Login

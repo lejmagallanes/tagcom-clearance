@@ -1,14 +1,24 @@
-import { Box, Button, Modal, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Modal,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { formateDate } from "../../services/datetime";
 import TablePaginate, {
   type TableColumnsProps,
 } from "../Generic/TablePaginate";
-import { Delete, Edit } from "@mui/icons-material";
+import { Edit } from "@mui/icons-material";
 import ClearanceForm from "./ClearanceForm";
 import { useState } from "react";
 import { modalStyle } from "../Generic/DeleteModalConfirmation";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { type FormikValues } from "formik";
+import PrintableReceipt from "./PrintableReceipt";
 
-export default function ViewClearanceSummary() {
+const ViewClearanceSummary = () => {
   const columns: TableColumnsProps[] = [
     { label: "Date", field: "date", minWidth: 150 },
     { label: "Name", field: "name", minWidth: 250 },
@@ -72,12 +82,23 @@ export default function ViewClearanceSummary() {
   };
 
   const [selectedItem, setSelectedItem] = useState<any>({});
+  const [openViewClearance, setOPenViewClearance] = useState<boolean>(false);
 
   const actionButtons = (props: any) => {
     return (
       <Stack direction={"row"}>
+        <IconButton
+          aria-label="view"
+          onClick={() => {
+            console.log("props,---", props);
+            setSelectedItem(props);
+            setOPenViewClearance(true);
+          }}
+        >
+          <VisibilityIcon />
+        </IconButton>
         <Button
-          variant="outlined"
+          variant="contained"
           onClick={() => {
             setSelectedItem(props);
             setOpenCFDialog(true);
@@ -123,6 +144,7 @@ export default function ViewClearanceSummary() {
   };
 
   const [reload, setReload] = useState<boolean>(false);
+
   return (
     <Box>
       <ClearanceFormDialog
@@ -144,6 +166,53 @@ export default function ViewClearanceSummary() {
       >
         <DeleteWarningMessage />
       </TablePaginate>
+      <OpenViewClearance
+        open={openViewClearance}
+        onClose={() => setOPenViewClearance(false)}
+        formValues={selectedItem}
+      />
     </Box>
   );
+};
+
+interface OpenViewClearanceProps {
+  open: boolean;
+  onClose: () => void;
+  formValues: FormikValues;
 }
+
+const OpenViewClearance = ({
+  open,
+  onClose,
+  formValues,
+}: OpenViewClearanceProps) => {
+  const modalStyle = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    bgcolor: "background.paper",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
+    overflow: "scroll",
+    height: "80vh",
+    width: "auto",
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={() => {
+        console.log("onn close");
+        onClose();
+      }}
+    >
+      <Box sx={modalStyle} justifyContent={"center"}>
+        <PrintableReceipt formValues={formValues} onClose={() => onClose()} />
+      </Box>
+    </Modal>
+  );
+};
+
+export default ViewClearanceSummary;

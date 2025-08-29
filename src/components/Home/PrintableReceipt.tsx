@@ -9,7 +9,7 @@ import { RealTimeDateTime } from "../../pages/Private/Home";
 
 interface PrintableReceiptProps {
   formValues: FormikValues;
-  formik: FormikProps<FormikValues>;
+  formik?: FormikProps<FormikValues>;
   onClose: () => void;
 }
 
@@ -133,17 +133,19 @@ const PrintableReceipt = ({
           },
           body: JSON.stringify({ data: "Hello Printer" }),
         })
-        .then(async (res) => {
+        .then(async () => {
           await axiosClient
             .post("/clearance", formValues)
             .then(() => {
-              formik.setValues(formik.initialValues);
-              formik.setStatus(formik.initialStatus);
-              formik.resetForm();
+              if (formik) {
+                formik.setValues(formik.initialValues);
+                formik.setStatus(formik.initialStatus);
+                formik.resetForm();
+              }
             })
             .catch((error: any) => {
               if (error.response.data.errors) {
-                formik.setErrors(error.response.data.errors);
+                if (formik) formik.setErrors(error.response.data.errors);
               }
             })
             .finally(() => {
@@ -190,7 +192,7 @@ const PrintableReceipt = ({
         </Grid>
         <Grid container size={12} justifyContent={"center"}>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={handleConnect}
             sx={{ width: "20vh" }}
           >

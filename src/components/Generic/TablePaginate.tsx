@@ -144,8 +144,15 @@ const TablePaginate = ({
         return;
       }
 
-      setFrom(data.meta.from);
-      setTo(data.meta.to);
+      if (!data.meta.from && !data.meta.to) {
+        setPage(0);
+        setFrom(0);
+        setTo(0);
+      } else {
+        setFrom(data.meta.from);
+        setTo(data.meta.to);
+      }
+
       setTimeout(() => {
         setTimeout(() => {
           setLoadingData(false);
@@ -189,7 +196,8 @@ const TablePaginate = ({
         .then(() => {
           handleClose();
           setSelectedItem(null);
-          fetchItems();
+          setPage(0);
+          fetchItems(1);
         })
         .catch((error) => {
           console.log(error);
@@ -274,7 +282,7 @@ const TablePaginate = ({
                   <Box>
                     <Stack direction="row">
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         startIcon={<ExitToApp />}
                         size="large"
                         sx={{ mb: 1 }}
@@ -327,7 +335,7 @@ const TablePaginate = ({
                 />
               </FormControl>
               <Button
-                variant="outlined"
+                variant="contained"
                 onClick={() => fetchItems()}
                 size="medium"
                 sx={{ ml: 1 }}
@@ -402,7 +410,7 @@ const TablePaginate = ({
                       <Stack direction={"row"}>
                         {actionButtons ? <>{actionButtons(item)}</> : null}
                         <Button
-                          variant="outlined"
+                          variant="contained"
                           onClick={() => {
                             setSelectedItem(item);
                             setOpen(true);
@@ -460,7 +468,7 @@ const TablePaginate = ({
               handleClose();
               setSelectedItem(null);
             }}
-            variant="outlined"
+            variant="contained"
             startIcon={<CancelOutlinedIcon />}
             style={{ marginRight: 10 }}
           >
