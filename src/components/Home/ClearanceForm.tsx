@@ -229,7 +229,7 @@ const ClearanceForm: React.FC<ClearanceFormProps> = ({
             sx={{ width: "25vh", mt: 5, alignSelf: "right" }}
             type="submit"
           >
-            {item?.id ? "Save Changes" : "View Clearance Slip"}
+            {item?.id ? "Save Changes" : "Save"}
           </Button>
         </Grid>
       </form>

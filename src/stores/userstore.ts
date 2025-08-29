@@ -36,6 +36,10 @@ class UserStore {
 
   setToken = (token: string | null) => {
     this.token = token;
+    if (!token) {
+      return localStorage.removeItem("ACCESS_TOKEN");
+    }
+    return localStorage.setItem("ACCESS_TOKEN", token);
   };
 
   setSnackBar = (snackBar: SnackbarProps | any) => {
