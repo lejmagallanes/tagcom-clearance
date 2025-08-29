@@ -8,7 +8,6 @@ import {
   Grid,
   InputAdornment,
   InputLabel,
-  Modal,
   OutlinedInput,
   Radio,
   RadioGroup,
@@ -22,10 +21,10 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useFormik, type FormikValues, type FormikProps } from "formik";
 import { observer } from "mobx-react-lite";
-import PrintableReceipt from "./PrintableReceipt";
 import { clearanceValidation } from "../../services/formikValidations";
 import { useMemo, useState } from "react";
 import axiosClient from "../../services/axiosClient";
+import OpenClearanceContent from "./OpenClearanceContent";
 
 type ClearanceFormProps = {
   item?: any;
@@ -226,11 +225,11 @@ const ClearanceForm: React.FC<ClearanceFormProps> = ({
         </Stack>
         <Grid sx={{ textAlign: "right" }}>
           <Button
-            variant="outlined"
-            sx={{ width: "20vh", mt: 5, alignSelf: "right" }}
+            variant="contained"
+            sx={{ width: "25vh", mt: 5, alignSelf: "right" }}
             type="submit"
           >
-            {item ? "Save Changes" : "View Clearance Slip"}
+            {item?.id ? "Save Changes" : "View Clearance Slip"}
           </Button>
         </Grid>
       </form>
@@ -245,47 +244,4 @@ const ClearanceForm: React.FC<ClearanceFormProps> = ({
   );
 };
 
-interface ClearanceDialogProps {
-  open: boolean;
-  onClose: () => void;
-  formValues: FormikValues;
-  formik: FormikProps<FormikValues>;
-}
-
-const OpenClearanceContent = ({
-  open,
-  onClose,
-  formValues,
-  formik,
-}: ClearanceDialogProps) => {
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-    overflow: "scroll",
-    height: "80vh",
-    width: "auto",
-  };
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      aria-labelledby="modal-modal-title"
-      aria-describedby="modal-modal-description"
-    >
-      <Box sx={style} justifyContent={"center"}>
-        <PrintableReceipt
-          formValues={formValues}
-          formik={formik}
-          onClose={onClose}
-        />
-      </Box>
-    </Modal>
-  );
-};
 export default observer(ClearanceForm);
