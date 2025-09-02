@@ -7,5 +7,8 @@ export default defineConfig(() => {
   return {
     base: env.VITE_ROUTE_APP_NAME,
     plugins: [react()],
+    server: {
+      port: parseInt(env.VITE_PORT || "5173"),
+    },
   };
 });

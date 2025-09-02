@@ -6,6 +6,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  styled,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -125,10 +126,38 @@ const DefaultLayout = observer(() => {
       >
         <div style={{ height: "2000px" }}>
           <Outlet />
+          <Footer />
         </div>
       </Box>
     </Box>
   );
 });
+
+const Footer = () => {
+  const StyledFooter = styled("footer", {
+    shouldForwardProp: (prop) => prop !== "primary",
+  })<any>(() => ({
+    ".footer": {
+      backgroundCcolor: "#f5f5f5" /* Light gray background */,
+      color: "#333" /* Dark text */,
+      textAlign: "center" /* Centered text */,
+      padding: "1rem" /* Space inside */,
+      position: "fixed" /* Stays at bottom */,
+      bottom: "0",
+      left: "0",
+      width: "100%" /* Full width */,
+      borderTop: "1px solid #ddd" /* Subtle top border */,
+    },
+  }));
+
+  return (
+    <StyledFooter className="footer">
+      <p>
+        © {new Date().getFullYear()} MagMa Solutions. All rights reserved. |
+        Version {import.meta.env.VITE_APP_VERSION}
+      </p>
+    </StyledFooter>
+  );
+};
 
 export default DefaultLayout;

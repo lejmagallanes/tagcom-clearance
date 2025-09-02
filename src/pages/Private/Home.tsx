@@ -39,7 +39,7 @@ const Home = () => {
   }));
 
   return (
-    <Box width={"100%"} className="private-home">
+    <Box width={"100%"} height={"85vh"} className="private-home">
       <TabContext value={tab}>
         <Box
           sx={{
